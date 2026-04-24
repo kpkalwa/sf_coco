@@ -173,7 +173,7 @@ This pattern — one view that decorates raw text with AI-derived columns — is
 </details>
 
 
-**Drill 1.7 — Model benchmarks and sentiment score.
+**Drill 1.7 — Model benchmarks and sentiment score.**
 
 <details><summary>▶ Solution</summary>
 
