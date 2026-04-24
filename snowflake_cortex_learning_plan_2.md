@@ -172,6 +172,111 @@ SELECT * FROM reviews_enriched;
 This pattern — one view that decorates raw text with AI-derived columns — is the backbone of most production Cortex work.
 </details>
 
+
+**Drill 1.7 — Model benchmarks and sentiment score.
+
+<details><summary>▶ Solution</summary>
+
+```sql
+WITH model_benchmark AS (
+  SELECT id, text, 'claude-3-7-sonnet' AS model_name,
+    AI_COMPLETE(
+      model => 'claude-3-7-sonnet',
+      prompt => 'Classify this review as exactly one of: quality, shipping, service, other. Rate sentiment as positive, negative, or neutral. Also provide a sentiment_score from -1.0 (most negative) to 1.0 (most positive). Return JSON only.\n\nReview: ' || text,
+      response_format => {
+        'type': 'json',
+        'schema': {
+          'type': 'object',
+          'properties': {
+            'category': {'type': 'string', 'enum': ['quality','shipping','service','other']},
+            'sentiment': {'type': 'string', 'enum': ['positive','negative','neutral']},
+            'sentiment_score': {'type': 'number'}
+          },
+          'required': ['category','sentiment','sentiment_score']
+        }
+      }
+    ) AS result
+  FROM reviews
+
+  UNION ALL
+
+  SELECT id, text, 'llama3.3-70b' AS model_name,
+    AI_COMPLETE(
+      model => 'llama3.3-70b',
+      prompt => 'Classify this review as exactly one of: quality, shipping, service, other. Rate sentiment as positive, negative, or neutral. Also provide a sentiment_score from -1.0 (most negative) to 1.0 (most positive). Return JSON only.\n\nReview: ' || text,
+      response_format => {
+        'type': 'json',
+        'schema': {
+          'type': 'object',
+          'properties': {
+            'category': {'type': 'string', 'enum': ['quality','shipping','service','other']},
+            'sentiment': {'type': 'string', 'enum': ['positive','negative','neutral']},
+            'sentiment_score': {'type': 'number'}
+          },
+          'required': ['category','sentiment','sentiment_score']
+        }
+      }
+    ) AS result
+  FROM reviews
+
+  UNION ALL
+
+  SELECT id, text, 'mistral-large2' AS model_name,
+    AI_COMPLETE(
+      model => 'mistral-large2',
+      prompt => 'Classify this review as exactly one of: quality, shipping, service, other. Rate sentiment as positive, negative, or neutral. Also provide a sentiment_score from -1.0 (most negative) to 1.0 (most positive). Return JSON only.\n\nReview: ' || text,
+      response_format => {
+        'type': 'json',
+        'schema': {
+          'type': 'object',
+          'properties': {
+            'category': {'type': 'string', 'enum': ['quality','shipping','service','other']},
+            'sentiment': {'type': 'string', 'enum': ['positive','negative','neutral']},
+            'sentiment_score': {'type': 'number'}
+          },
+          'required': ['category','sentiment','sentiment_score']
+        }
+      }
+    ) AS result
+  FROM reviews
+
+  UNION ALL
+
+  SELECT id, text, 'snowflake-arctic' AS model_name,
+    AI_COMPLETE(
+      model => 'snowflake-arctic',
+      prompt => 'Classify this review as exactly one of: quality, shipping, service, other. Rate sentiment as positive, negative, or neutral. Also provide a sentiment_score from -1.0 (most negative) to 1.0 (most positive). Return JSON only.\n\nReview: ' || text,
+      response_format => {
+        'type': 'json',
+        'schema': {
+          'type': 'object',
+          'properties': {
+            'category': {'type': 'string', 'enum': ['quality','shipping','service','other']},
+            'sentiment': {'type': 'string', 'enum': ['positive','negative','neutral']},
+            'sentiment_score': {'type': 'number'}
+          },
+          'required': ['category','sentiment','sentiment_score']
+        }
+      }
+    ) AS result
+  FROM reviews
+)
+SELECT
+  model_name,
+  id,
+  text,
+  result:category::STRING AS category,
+  result:sentiment::STRING AS sentiment,
+  result:sentiment_score::FLOAT AS model_sentiment_score,
+  SNOWFLAKE.CORTEX.SENTIMENT(text) AS cortex_sentiment_score
+FROM model_benchmark
+ORDER BY id, model_name;
+```
+performance benchmark query testing AI_COMPLETE accuracy across multiple supported models on your review data
+</details>
+
+
+
 ### Guided lab
 - **Quickstart:** [Getting Started with Snowflake Arctic and Snowflake Cortex](https://github.com/Snowflake-Labs/sfguide-getting-started-with-snowflake-arctic-and-snowflake-cortex)
 
