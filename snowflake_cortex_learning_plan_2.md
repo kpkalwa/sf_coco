@@ -90,20 +90,18 @@ Sentiment returns a float from -1 to 1. Notice how mixed reviews (#4) land near 
 
 ```sql
 SELECT AI_COMPLETE(
-  'claude-3-5-sonnet',
-  'Extract product, issue, and severity (low/med/high) from: My blender exploded and covered my kitchen in smoothie — total disaster.',
-  {
-    'response_format': {
-      'type': 'json',
-      'schema': {
-        'type': 'object',
-        'properties': {
-          'product': {'type': 'string'},
-          'issue': {'type': 'string'},
-          'severity': {'type': 'string', 'enum': ['low','med','high']}
-        },
-        'required': ['product','issue','severity']
-      }
+  model => 'claude-3-7-sonnet',
+  prompt => 'Extract product, issue, and severity (low/med/high) from: My blender exploded and covered my kitchen in smoothie — total disaster.',
+  response_format => {
+    'type': 'json',
+    'schema': {
+      'type': 'object',
+      'properties': {
+        'product': {'type': 'string'},
+        'issue': {'type': 'string'},
+        'severity': {'type': 'string', 'enum': ['low','med','high']}
+      },
+      'required': ['product','issue','severity']
     }
   }
 ) AS result;
