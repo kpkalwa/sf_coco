@@ -162,7 +162,7 @@ CREATE OR REPLACE VIEW reviews_enriched AS
 SELECT
   id,
   text,
-  AI_SUMMARIZE(text) AS summary,
+  SNOWFLAKE.CORTEX.SUMMARIZE(text) AS summary,
   SNOWFLAKE.CORTEX.SENTIMENT(text) AS sentiment,
   AI_TRANSLATE(text, 'en', 'es') AS spanish_translation
 FROM reviews;
