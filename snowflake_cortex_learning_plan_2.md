@@ -117,6 +117,25 @@ Structured outputs are the single most useful Cortex feature for production pipe
 SELECT id, text,
   AI_CLASSIFY(text, ['quality','shipping','service','other']) AS category
 FROM reviews;
+
+or
+
+SELECT id, text,
+  AI_COMPLETE(
+    model => 'claude-3-7-sonnet',
+    prompt => 'Classify the following review into exactly one category: quality, shipping, service, or other. Return only the category name, nothing else.\n\nReview: ' || text,
+    response_format => {
+      'type': 'json',
+      'schema': {
+        'type': 'object',
+        'properties': {
+          'category': {'type': 'string', 'enum': ['quality','shipping','service','other']}
+        },
+        'required': ['category']
+      }
+    }
+  ) AS category
+FROM reviews;
 ```
 `AI_CLASSIFY` is faster and cheaper than `AI_COMPLETE` for this task. Use the specialized function whenever one exists.
 </details>
@@ -126,8 +145,9 @@ FROM reviews;
 <details><summary>▶ Solution</summary>
 
 ```sql
-SELECT SUM(AI_COUNT_TOKENS('snowflake-arctic', text)) AS total_tokens,
-       SUM(AI_COUNT_TOKENS('snowflake-arctic', text)) * 2000 AS projected_10k
+SELECT SUM(AI_COUNT_TOKENS('ai_complete', 'snowflake-arctic', text)) AS total_tokens,
+        SUM(AI_COUNT_TOKENS('ai_complete', 'claude-3-7-sonnet', text)) AS total_tokens_1,
+       SUM(AI_COUNT_TOKENS('ai_complete', 'snowflake-arctic', text)) * 2000 AS projected_10k
 FROM reviews;
 ```
 Always do this math before running a Cortex function over a big table. `AI_COUNT_TOKENS` is free to call.
